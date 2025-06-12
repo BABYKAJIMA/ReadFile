@@ -1,0 +1,100 @@
+﻿@model CameraView.Models.ExcelDataModels;
+@{
+    ViewData["Title"] = "CameraView";
+    var excelData = ViewBag.ExcelData as List<List<object>>;
+    var switchList = ViewBag.SwitchData as List<CameraView.Models.ExcelDataModels>;
+}
+
+<div class="card mt-4">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">📘 Danh sách kết nối Switch</h5>
+        <div>
+            <a class="btn btn-success btn-sm me-2" asp-page="/Create">+ Nhập thủ công</a>
+            <button class="btn btn-outline-light btn-sm" data-bs-toggle="collapse" data-bs-target="#importForm">📥 Import từ Excel</button>
+        </div>
+    </div>
+
+    <div class="card-body">
+
+        <!-- Form nhập thủ công -->
+        <form asp-action="SwitchForm" method="post" class="mb-4">
+            <div class="row g-2">
+                <div class="col-md-2"><input asp-for="STT" class="form-control" placeholder="STT" /></div>
+                <div class="col-md-2"><input asp-for="STT" class="form-control" placeholder="Switch Name" /></div>
+                <div class="col-md-2"><input asp-for="Port" class="form-control" placeholder="Port" /></div>
+                <div class="col-md-2"><input asp-for="MacAddress" class="form-control" placeholder="Địa chỉ MAC" /></div>
+                <div class="col-md-1"><input asp-for="VLAN" class="form-control" placeholder="VLAN" /></div>
+                <div class="col-md-3"><input asp-for="Location" class="form-control" placeholder="Điểm kết nối" /></div>
+                <div class="col-md-2"><input asp-for="Note" class="form-control" placeholder="Ghi chú" /></div>
+            </div>
+            <button type="submit" class="btn btn-primary mt-3">+ Thêm kết nối mới</button>
+        </form>
+
+        <!-- Form Upload Excel -->
+        <div class="collapse mb-4" id="importForm">
+            <form method="post" enctype="multipart/form-data" asp-action="CameraView">
+                <div class="mb-3">
+                    <label class="form-label">📄 Chọn file Excel (.xlsx)</label>
+                    <input type="file" name="file" class="form-control" accept=".xlsx,.csv" required />
+                </div>
+                <button type="submit" class="btn btn-dark btn-sm">📤 Tải lên</button>
+            </form>
+        </div>
+
+        <!-- Hiển thị Dữ liệu Kết hợp -->
+        <div class="mt-4">
+            @if ((switchList != null && switchList.Count > 0) || (excelData != null && excelData.Count > 0))
+            {
+                <table class="table table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>STT</th>
+                            <th>Tên Switch</th>
+                            <th>Port</th>
+                            <th>Địa chỉ MAC</th>
+                            <th>VLAN</th>
+                            <th>Điểm kết nối</th>
+                            <th>Ghi chú</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Dữ liệu từ nhập tay -->
+                        @if (switchList != null)
+                        {
+                            foreach (var item in switchList)
+                            {
+                                <tr>
+                                    <td>@item.STT</td>
+                                    <td>@item.SwitchName</td>
+                                    <td>@item.Port</td>
+                                    <td>@item.MacAddress</td>
+                                    <td>@item.VLAN</td>
+                                    <td>@item.Location</td>
+                                    <td>@item.Note</td>
+                                </tr>
+                            }
+                        }
+
+                        <!-- Dữ liệu từ Excel -->
+                        @if (excelData != null && excelData.Count > 1)
+                        {
+                            for (int i = 1; i < excelData.Count; i++)
+                            {
+                                <tr>
+                                    @foreach (var cell in excelData[i])
+                                    {
+                                        <td>@cell</td>
+                                    }
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <p class="text-muted">Chưa có dữ liệu hiển thị.</p>
+            }
+        </div>
+    </div>
+</div>
