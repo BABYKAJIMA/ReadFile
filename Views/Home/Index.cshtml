@@ -1,8 +1,35 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@using System.Security.Claims
+@{
+    ViewData["Title"] = "Trang chính";
+    string username = User.Identity?.Name ?? "Khách";
+    string role = User.FindFirst(ClaimTypes.Role)?.Value ?? "User";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="container py-4">
+    <h3 class="text-primary mb-3">👋 Xin chào, <strong>@username</strong>!</h3>
+    <p class="text-muted">Vai trò hiện tại: <span class="badge bg-secondary">@role</span></p>
+
+    <hr />
+
+    <div class="row mt-4">
+        <div class="col-md-6 mb-3">
+            <div class="card border-primary h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-primary">📷 Quản lý thiết bị mạng</h5>
+                    <p class="card-text">Xem và quản lý danh sách các kết nối thiết bị Switch, nhập dữ liệu từ Excel hoặc chỉnh sửa trực tiếp.</p>
+                    <a asp-action="CameraView" class="btn btn-outline-primary">Vào CameraView</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <div class="card border-success h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-success">👥 Quản lý người dùng</h5>
+                    <p class="card-text">Thêm mới, chỉnh sửa hoặc phân quyền cho tài khoản đăng nhập hệ thống.</p>
+                    <a asp-controller="UserManager" asp-action="Index" class="btn btn-outline-success">Vào UserManager</a>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

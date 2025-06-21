@@ -1,100 +1,227 @@
-﻿@model CameraView.Models.ExcelDataModels;
+﻿@model CameraView.Models.ExcelDataModels
+@using System.Security.Claims
+
 @{
-    ViewData["Title"] = "CameraView";
-    var excelData = ViewBag.ExcelData as List<List<object>>;
-    var switchList = ViewBag.SwitchData as List<CameraView.Models.ExcelDataModels>;
+    var devices = ViewBag.DeviceRecords as List<CameraView.Models.DeviceRecord>;
+    string username = ViewBag.Username as string ?? "Khách";
+    string role = ViewBag.Role as string ?? "User";
 }
 
-<div class="card mt-4">
-    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">📘 Danh sách kết nối Switch</h5>
+<p class="text-danger">Vai trò hiện tại: <strong>@role</strong></p>
+
+<div class="container-fluid px-4 mt-4">
+    <div class="d-flex justify-content-between mb-3">
+        <h5 class="text-primary fw-bold">📘 Danh sách thiết bị mạng</h5>
         <div>
-            <a class="btn btn-success btn-sm me-2" asp-page="/Create">+ Nhập thủ công</a>
-            <button class="btn btn-outline-light btn-sm" data-bs-toggle="collapse" data-bs-target="#importForm">📥 Import từ Excel</button>
+            @if (role.Trim().ToLower() == "admin")
+            {
+                <button class="btn btn-sm btn-outline-primary me-2" onclick="openAddModal()">➕ Thêm thiết bị</button>
+            }
+            <button class="btn btn-sm btn-outline-dark me-2" data-bs-toggle="collapse" data-bs-target="#importForm">📥 Nhập từ Excel</button>
+            <form method="get" asp-action="ExportToExcel" class="d-inline">
+                <button type="submit" class="btn btn-sm btn-outline-success">📤 Xuất Excel</button>
+            </form>
         </div>
     </div>
 
-    <div class="card-body">
-
-        <!-- Form nhập thủ công -->
-        <form asp-action="SwitchForm" method="post" class="mb-4">
-            <div class="row g-2">
-                <div class="col-md-2"><input asp-for="STT" class="form-control" placeholder="STT" /></div>
-                <div class="col-md-2"><input asp-for="STT" class="form-control" placeholder="Switch Name" /></div>
-                <div class="col-md-2"><input asp-for="Port" class="form-control" placeholder="Port" /></div>
-                <div class="col-md-2"><input asp-for="MacAddress" class="form-control" placeholder="Địa chỉ MAC" /></div>
-                <div class="col-md-1"><input asp-for="VLAN" class="form-control" placeholder="VLAN" /></div>
-                <div class="col-md-3"><input asp-for="Location" class="form-control" placeholder="Điểm kết nối" /></div>
-                <div class="col-md-2"><input asp-for="Note" class="form-control" placeholder="Ghi chú" /></div>
+    <div class="collapse mb-4" id="importForm">
+        <form method="post" enctype="multipart/form-data" asp-action="CameraView" class="bg-light p-3 rounded border">
+            <div class="mb-3">
+                <label class="form-label fw-semibold">📄 Chọn file Excel (.xlsx)</label>
+                <input type="file" name="file" class="form-control" accept=".xlsx,.csv" required />
             </div>
-            <button type="submit" class="btn btn-primary mt-3">+ Thêm kết nối mới</button>
+            <button type="submit" class="btn btn-dark btn-sm">📤 Tải lên</button>
         </form>
+    </div>
 
-        <!-- Form Upload Excel -->
-        <div class="collapse mb-4" id="importForm">
-            <form method="post" enctype="multipart/form-data" asp-action="CameraView">
-                <div class="mb-3">
-                    <label class="form-label">📄 Chọn file Excel (.xlsx)</label>
-                    <input type="file" name="file" class="form-control" accept=".xlsx,.csv" required />
-                </div>
-                <button type="submit" class="btn btn-dark btn-sm">📤 Tải lên</button>
-            </form>
-        </div>
-
-        <!-- Hiển thị Dữ liệu Kết hợp -->
-        <div class="mt-4">
-            @if ((switchList != null && switchList.Count > 0) || (excelData != null && excelData.Count > 0))
-            {
-                <table class="table table-bordered table-hover">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>STT</th>
-                            <th>Tên Switch</th>
-                            <th>Port</th>
-                            <th>Địa chỉ MAC</th>
-                            <th>VLAN</th>
-                            <th>Điểm kết nối</th>
-                            <th>Ghi chú</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Dữ liệu từ nhập tay -->
-                        @if (switchList != null)
-                        {
-                            foreach (var item in switchList)
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle text-center w-100" id="deviceTable">
+            <thead class="table-primary sticky-top">
+                <tr>
+                    <th>STT</th>
+                    <th>Loại kết nối</th>
+                    <th>Tên thiết bị</th>
+                    <th>IP</th>
+                    <th>Channel/Zone</th>
+                    <th>VLAN</th>
+                    <th>Port</th>
+                    <th>Tủ Rack</th>
+                    <th>ODF Patch</th>
+                    <th>Sợi/Port</th>
+                    <th>Tên nhãn</th>
+                    <th>ODF 1</th>
+                    <th>Sợi 1</th>
+                    <th>Tên nhãn 2</th>
+                    <th>ODF 2</th>
+                    <th>Sợi 2</th>
+                    <th>Điểm đầu/cuối</th>
+                    <th>🛠</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (int i = 0; i < devices.Count; i++)
+                {
+                    var d = devices[i];
+                    <tr data-index="@i">
+                        <td>@d.STT</td>
+                        <td>@d.LoaiKetNoi</td>
+                        <td>@d.TenThietBi</td>
+                        <td>@d.IP</td>
+                        <td>@d.ChannelZone</td>
+                        <td>@d.VLAN</td>
+                        <td>@d.Port</td>
+                        <td>@d.TuRack</td>
+                        <td>@d.ODFPatchPannel</td>
+                        <td>@d.SoSoiPort</td>
+                        <td>@d.TenNhanDan</td>
+                        <td>@d.ODF1</td>
+                        <td>@d.SoSoi1</td>
+                        <td>@d.TenNhanDan2</td>
+                        <td>@d.ODF2</td>
+                        <td>@d.SoSoi2</td>
+                        <td>@d.DiemDauCuoi</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-info" onclick="showDetails(@i)">🔍</button>
+                            @if (role.Trim().ToLower() == "admin")
                             {
-                                <tr>
-                                    <td>@item.STT</td>
-                                    <td>@item.SwitchName</td>
-                                    <td>@item.Port</td>
-                                    <td>@item.MacAddress</td>
-                                    <td>@item.VLAN</td>
-                                    <td>@item.Location</td>
-                                    <td>@item.Note</td>
-                                </tr>
+                                <button class="btn btn-sm btn-outline-warning" onclick="editRow(@i)">✏️</button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteRow(@i)">🗑️</button>
                             }
-                        }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
 
-                        <!-- Dữ liệu từ Excel -->
-                        @if (excelData != null && excelData.Count > 1)
-                        {
-                            for (int i = 1; i < excelData.Count; i++)
-                            {
-                                <tr>
-                                    @foreach (var cell in excelData[i])
-                                    {
-                                        <td>@cell</td>
-                                    }
-                                </tr>
-                            }
-                        }
-                    </tbody>
-                </table>
-            }
-            else
-            {
-                <p class="text-muted">Chưa có dữ liệu hiển thị.</p>
-            }
+<<!-- Modal: Thêm thiết bị -->
+<div class="modal fade" id="addRowModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white"><h5 class="modal-title">➕ Thêm thiết bị</h5></div>
+            <div class="modal-body">
+                <form id="addRowForm" class="row g-3">
+                    <!-- Tạo form input động từ JS -->
+                    <div id="addRowFields"></div>
+                    <div class="text-end mt-3">
+                        <button type="button" class="btn btn-success btn-sm" onclick="submitAddRow()">Lưu</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>
+
+<!-- Modal: Sửa thiết bị -->
+<div class="modal fade" id="editRowModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-warning"><h5 class="modal-title">✏️ Chỉnh sửa thiết bị</h5></div>
+            <div class="modal-body">
+                <form id="editRowForm" class="row g-3">
+                    <input type="hidden" id="editRowIndex" />
+                    <div id="editRowFields"></div>
+                    <div class="text-end mt-3">
+                        <button type="button" class="btn btn-primary btn-sm" onclick="submitEditRow()">Lưu thay đổi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Chi tiết thiết bị -->
+<div class="modal fade" id="detailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white"><h5 class="modal-title">🔍 Chi tiết thiết bị</h5></div>
+            <div class="modal-body">
+                <table class="table table-bordered"><tbody id="detailContentTable"></tbody></table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const headers = [
+            "STT", "Loại kết nối", "Tên thiết bị", "IP", "Channel/Zone", "VLAN", "Port", "Tủ Rack",
+            "ODF Patch", "Sợi/Port", "Tên nhãn", "ODF 1", "Sợi 1", "Tên nhãn 2", "ODF 2", "Sợi 2", "Điểm đầu/cuối"
+        ];
+
+        function openAddModal() {
+            const container = document.getElementById("addRowFields");
+            container.innerHTML = "";
+            headers.forEach((h, i) => {
+                container.innerHTML += `<div class="col-md-6">
+                    <label class="form-label">${h}</label>
+                    <input type="text" class="form-control" name="add-${i}" />
+                </div>`;
+            });
+            new bootstrap.Modal(document.getElementById("addRowModal")).show();
+        }
+
+        async function submitAddRow() {
+            const values = headers.map((_, i) => document.querySelector(`input[name="add-${i}"]`).value.trim());
+            const res = await fetch("/Home/AddRowManualAjax", {
+                method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(values)
+            });
+            const result = await res.json();
+            if (result.success) location.reload();
+        }
+
+        function editRow(index) {
+            const row = document.querySelector(`#deviceTable tbody tr[data-index='${index}']`);
+            const cells = row.querySelectorAll("td");
+            const container = document.getElementById("editRowFields");
+            container.innerHTML = "";
+            document.getElementById("editRowIndex").value = index;
+            cells.forEach((cell, i) => {
+                if (i < headers.length) {
+                    container.innerHTML += `<div class="col-md-6">
+                        <label class="form-label">${headers[i]}</label>
+                        <input type="text" class="form-control" name="edit-${i}" value="${cell.textContent.trim()}" />
+                    </div>`;
+                }
+            });
+            new bootstrap.Modal(document.getElementById("editRowModal")).show();
+        }
+
+        async function submitEditRow() {
+            const index = parseInt(document.getElementById("editRowIndex").value);
+            const values = headers.map((_, i) => document.querySelector(`input[name="edit-${i}"]`).value.trim());
+            const res = await fetch("/Home/UpdateRowAjax", {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ index: index, values: values })
+            });
+            const result = await res.json();
+            if (result.success) location.reload();
+        }
+
+        function showDetails(index) {
+            const row = document.querySelector(`#deviceTable tbody tr[data-index='${index}']`);
+            const cells = row.querySelectorAll("td");
+            const tbody = document.getElementById("detailContentTable");
+            tbody.innerHTML = "";
+            cells.forEach((cell, i) => {
+                if (i < headers.length) {
+                    tbody.innerHTML += `<tr><td class="fw-bold">${headers[i]}</td><td>${cell.textContent.trim()}</td></tr>`;
+                }
+            });
+            new bootstrap.Modal(document.getElementById("detailModal")).show();
+        }
+                async function deleteRow(index) {
+            if (!confirm("Bạn có chắc chắn muốn xoá thiết bị này không?")) return;
+
+            const res = await fetch("/Home/DeleteRowAjax", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(index)
+            });
+
+            const result = await res.json();
+            if (result.success) location.reload();
+        }
+    </script>
+}

@@ -1,3 +1,8 @@
 ﻿@{
+    Layout = Context.Request.Path.StartsWithSegments("/Login")
+        ? null
+        : "_Layout";
+}
+@{
     Layout = "_Layout";
 }

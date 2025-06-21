@@ -1,0 +1,46 @@
+﻿body {
+    background-color: #e9ecef; /* hoặc màu khác tùy chọn */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.login-container {
+    width: 360px;
+    padding: 40px;
+    border: 1px solid #eee;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    text-align: center;
+}
+
+.logo img {
+    width: 120px;
+    margin-bottom: 20px;
+}
+
+.form-control {
+    height: 45px;
+    font-size: 14px;
+}
+
+.btn-login {
+    background-color: #005baa;
+    color: #fff;
+    width: 100%;
+    height: 45px;
+    font-weight: 500;
+    border: none;
+}
+
+    .btn-login:hover {
+        background-color: #004b8f;
+    }
+
+.error-message {
+    color: red;
+    margin-top: 10px;
+}
+

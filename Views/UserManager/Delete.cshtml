@@ -1,0 +1,16 @@
+﻿@model CameraView.Models.User
+@{
+    ViewData["Title"] = "Xác nhận xoá";
+}
+
+<h3 class="text-danger">🗑️ Xác nhận xoá người dùng</h3>
+
+<div class="alert alert-warning">
+    Bạn có chắc chắn muốn xoá tài khoản: <strong>@Model.Username</strong>?
+</div>
+
+<form asp-action="Delete" method="post">
+    <input type="hidden" asp-for="Id" />
+    <a asp-action="Index" class="btn btn-secondary btn-sm">⬅ Huỷ</a>
+    <button type="submit" class="btn btn-danger btn-sm">Xoá</button>
+</form>

@@ -1,0 +1,50 @@
+﻿@model List<CameraView.Models.User>
+@{
+    ViewData["Title"] = "Quản lý người dùng";
+}
+
+<h2 class="mb-4 text-primary">📋 Danh sách người dùng</h2>
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle-fill"></i> @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+    </div>
+}
+
+<a asp-action="Create" class="btn btn-success btn-sm mb-3">➕ Thêm người dùng</a>
+
+<table class="table table-bordered table-hover">
+    <thead class="table-light">
+        <tr>
+            <th>#</th>
+            <th>Tên đăng nhập</th>
+            <th>Quyền</th>
+            <th>🛠 Thao tác</th> <!-- Thêm cột mới -->
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model.Count == 0)
+        {
+            <tr><td colspan="4" class="text-center text-muted">Chưa có người dùng nào.</td></tr>
+        }
+        else
+        {
+            int index = 1;
+            foreach (var user in Model)
+            {
+                <tr>
+                    <td>@index</td>
+                    <td>@user.Username</td>
+                    <td>@user.Role</td>
+                    <td>
+                        
+                        <a asp-action="Edit" asp-route-id="@user.Id" class="btn btn-sm btn-warning">✏️</a>
+                        <a asp-action="Delete" asp-route-id="@user.Id" class="btn btn-sm btn-danger ms-1">🗑️</a>
+                    </td>
+                </tr>
+                index++;
+            }
+        }
+    </tbody>
+</table>
